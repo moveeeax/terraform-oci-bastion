@@ -24,6 +24,10 @@ jobs:
       - name: validate
         run: tofu validate
 
+      # Provider is mocked in tests/, so this needs no OCI credentials and makes no API calls.
+      - name: test
+        run: tofu test
+
       - name: validate example
         working-directory: examples/basic
         run: |

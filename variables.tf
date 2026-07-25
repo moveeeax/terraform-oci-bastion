@@ -14,20 +14,30 @@ variable "target_subnet_id" {
 }
 
 variable "client_cidr_block_allow_list" {
-  description = "List of CIDR blocks allowed to connect to sessions on this bastion."
+  description = <<-EOT
+    List of CIDR blocks allowed to connect to sessions on this bastion. Required and
+    deliberately without a default: a bastion is a hole in the network perimeter, so the
+    set of source networks that may reach it has to be an explicit decision. Narrow this
+    to your office, VPN or CI egress ranges; "0.0.0.0/0" exposes the bastion endpoint to
+    the entire internet.
+  EOT
   type        = list(string)
-  default     = ["0.0.0.0/0"]
 
   validation {
     condition     = length(var.client_cidr_block_allow_list) > 0
     error_message = "At least one client CIDR block must be provided."
   }
+
+  validation {
+    condition     = alltrue([for cidr in var.client_cidr_block_allow_list : can(cidrhost(cidr, 0))])
+    error_message = "Every entry must be a valid CIDR block, e.g. \"203.0.113.0/24\" (a bare IP address is not accepted; use \"/32\")."
+  }
 }
 
 variable "max_session_ttl_in_seconds" {
-  description = "Maximum time-to-live for sessions created on the bastion, in seconds (1800-10800)."
+  description = "Maximum time-to-live for sessions created on the bastion, in seconds (1800-10800). Defaults to one hour; raise it deliberately, sessions that outlive the work they were opened for are the ones that get abused."
   type        = number
-  default     = 10800
+  default     = 3600
 
   validation {
     condition     = var.max_session_ttl_in_seconds >= 1800 && var.max_session_ttl_in_seconds <= 10800

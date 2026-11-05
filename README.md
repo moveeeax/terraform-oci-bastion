@@ -8,7 +8,7 @@ the public internet. Individual sessions are created separately against this bas
 
 ```hcl
 module "bastion" {
-  source = "github.com/moveeeax/terraform-oci-bastion"
+  source = "github.com/moveeeax/terraform-oci-bastion?ref=v1.0.0"
 
   compartment_id   = var.compartment_id
   name             = "prod-bastion"

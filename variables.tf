@@ -18,8 +18,9 @@ variable "client_cidr_block_allow_list" {
     List of CIDR blocks allowed to connect to sessions on this bastion. Required and
     deliberately without a default: a bastion is a hole in the network perimeter, so the
     set of source networks that may reach it has to be an explicit decision. Narrow this
-    to your office, VPN or CI egress ranges; "0.0.0.0/0" exposes the bastion endpoint to
-    the entire internet.
+    to your office, VPN or CI egress ranges. A /0 entry ("0.0.0.0/0" or "::/0") exposes
+    the bastion endpoint to the entire internet and is rejected unless
+    allow_public_client_cidrs = true.
   EOT
   type        = list(string)
 
@@ -32,6 +33,12 @@ variable "client_cidr_block_allow_list" {
     condition     = alltrue([for cidr in var.client_cidr_block_allow_list : can(cidrhost(cidr, 0))])
     error_message = "Every entry must be a valid CIDR block, e.g. \"203.0.113.0/24\" (a bare IP address is not accepted; use \"/32\")."
   }
+}
+
+variable "allow_public_client_cidrs" {
+  description = "Allow /0 entries (\"0.0.0.0/0\", \"::/0\") in client_cidr_block_allow_list. Off by default, so an allow list open to the whole internet fails at plan time instead of being applied by accident."
+  type        = bool
+  default     = false
 }
 
 variable "max_session_ttl_in_seconds" {

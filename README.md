@@ -32,8 +32,12 @@ narrow option:
 
 - **`client_cidr_block_allow_list` is required and has no default.** There is no safe value
   to guess. Set it to the source networks that legitimately need bastion access — your
-  office, VPN or CI egress ranges. `["0.0.0.0/0"]` is accepted, but only as an explicit,
-  visible-in-review choice.
+  office, VPN or CI egress ranges.
+- **`/0` entries are rejected unless `allow_public_client_cidrs = true`.** An entry with a
+  `/0` prefix (`0.0.0.0/0`, `::/0`, or any other address written with `/0`) lets the whole
+  internet reach the bastion endpoint, and it is the usual copy-paste value. Plan fails
+  with an error naming the offending entries until you narrow the list or set the flag,
+  which keeps the choice explicit and visible in review.
 - **`max_session_ttl_in_seconds` defaults to `3600`** (one hour) rather than the OCI maximum
   of `10800` (three hours). Sessions that outlive the work they were opened for are the ones
   that get abused. Raise it if your workflows genuinely need longer.
@@ -56,6 +60,7 @@ narrow option:
 | `name`                         | Name of the bastion (unique within the compartment).           | `string`       | n/a               |   yes    |
 | `target_subnet_id`             | OCID of the subnet the bastion routes sessions into.           | `string`       | n/a               |   yes    |
 | `client_cidr_block_allow_list` | CIDR blocks allowed to connect to sessions. No default — see [Security defaults](#security-defaults). | `list(string)` | n/a |   yes    |
+| `allow_public_client_cidrs`    | Allow `/0` entries (`0.0.0.0/0`, `::/0`) in the allow list.    | `bool`         | `false`           |    no    |
 | `max_session_ttl_in_seconds`   | Maximum session TTL in seconds (1800-10800).                   | `number`       | `3600`            |    no    |
 | `freeform_tags`                | Free-form tags applied to the bastion.                         | `map(string)`  | `{}`              |    no    |
 | `defined_tags`                 | Defined tags applied to the bastion, keyed `namespace.key`.     | `map(string)`  | `{}`              |    no    |

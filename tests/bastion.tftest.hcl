@@ -71,6 +71,51 @@ run "accepts_multiple_cidrs" {
   }
 }
 
+run "rejects_open_ipv4_cidr_by_default" {
+  command = plan
+
+  variables {
+    client_cidr_block_allow_list = ["203.0.113.0/24", "0.0.0.0/0"]
+  }
+
+  expect_failures = [oci_bastion_bastion.this]
+}
+
+run "rejects_open_ipv6_cidr_by_default" {
+  command = plan
+
+  variables {
+    client_cidr_block_allow_list = ["::/0"]
+  }
+
+  expect_failures = [oci_bastion_bastion.this]
+}
+
+# Any address with a /0 prefix covers the whole address space, not just 0.0.0.0/0.
+run "rejects_non_canonical_open_cidr_by_default" {
+  command = plan
+
+  variables {
+    client_cidr_block_allow_list = ["10.0.0.0/0"]
+  }
+
+  expect_failures = [oci_bastion_bastion.this]
+}
+
+run "accepts_open_cidr_with_explicit_opt_in" {
+  command = plan
+
+  variables {
+    client_cidr_block_allow_list = ["0.0.0.0/0"]
+    allow_public_client_cidrs    = true
+  }
+
+  assert {
+    condition     = contains(oci_bastion_bastion.this.client_cidr_block_allow_list, "0.0.0.0/0")
+    error_message = "With allow_public_client_cidrs = true a /0 entry must be passed through."
+  }
+}
+
 run "rejects_ttl_below_minimum" {
   command = plan
 
